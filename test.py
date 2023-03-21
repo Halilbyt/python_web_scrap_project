@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs
 import copy
 import googletrans
 from googletrans import Translator
@@ -9,35 +9,58 @@ from urllib.request import Request
 import time
 import codecs
 
-
-# Creating translator object
 translator = Translator()
-# Checking supporting languages
-langs = googletrans.LANGCODES
-# testing translator
-#result = translator.translate("Hello World",src="en",dest="hi")
-# test result:
-#print(result)
 
+# myOptions = webdriver.ChromeOptions()
+
+# prefs = {
+#     "translate_whitelists":{"en":"hi"},
+#     "translate":{"enabled":"true"}
+# }
+
+#myOptions.add_experimental_option("prefs",prefs)
+
+driver = webdriver.Chrome()
 
 url = "https://www.classcentral.com/"
-headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
 
-
-# Method - 2 Using Selenium:
-driver = webdriver.Chrome("C:/Users/D4rkS/Desktop/chromedriver_win32/chromedriver.exe")
+driver.get(url)
 time.sleep(1)
-driver.get("https://www.classcentral.com/")
-time.sleep(5)
-with codecs.open("selen2_index.html","w","utf-8") as f:
-    f.write(driver.page_source)
-soup_2 = BeautifulSoup(driver.page_source,"html.parser")
 
+soup = bs(driver.page_source,"html.parser")
 
-print(soup_2.find_all("p",{"class":"row vert-align-top horz-align-left text-2 medium-up-text-1 margin-top-xsmall padding-horz-xxsmall"})[0].replace_with(translator.translate(soup_2.find_all("p",{"class":"row vert-align-top horz-align-left text-2 medium-up-text-1 margin-top-xsmall padding-horz-xxsmall"})[0].text,dest="hi")))
-
-print(print(soup_2.find_all("p",{"class":"row vert-align-top horz-align-left text-2 medium-up-text-1 margin-top-xsmall padding-horz-xxsmall"})[0].text))
 
 driver.close()
 
- 
+
+time.sleep(1)
+
+
+translated_text = soup.find_all("p")[18]
+
+# for tags in soup.find_all(text=True):
+#      tags.replace_with(translator.translate(tags.text,dest="hi").text)
+
+# with open("index_translated.html","w",encoding="utf-8") as f:
+#      f.write(str(soup))
+
+print(len(soup.find_all("p")))
+print(translated_text.find_all(text=True)[1])
+print("**********************************")
+print(translated_text.find_all(text=True))
+for innerText in translated_text.find_all(text=True):
+    if(innerText.text != '\n'):
+        innerText.replace_with(translator.translate(innerText.text,dest="hi").text)
+    else:
+        pass
+
+print(translated_text.find_all(text=True))
+    
+
+# for i in soup.find_all('p'):
+#     print(i.text)
+
+"""
+if not re.match(r'<[^>]+>',str(t))
+['\n', '12,437', ' lists created in the past 7 days\n            ']
+"""

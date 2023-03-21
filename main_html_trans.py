@@ -8,12 +8,11 @@ import urllib.request
 from urllib.request import Request
 import time
 import codecs
-from webdriver_manager.chrome import ChromeDriverManager
-
+import re
 # Creating translator object
 translator = Translator()
 # Checking supporting languages
-#langs = googletrans.LANGCODES
+langs = googletrans.LANGCODES
 # testing translator
 #result = translator.translate("Hello World",src="en",dest="hi")
 # test result:
@@ -27,7 +26,7 @@ On the other hand, the Google Translate Api has a default billable limit of 5 re
 """
 
 # Method - 1 Using BeautifulSoup for web screping:
-
+ 
 url = "https://www.classcentral.com/"
 headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
 
@@ -38,12 +37,12 @@ html_content = response.content
 soup = BeautifulSoup(html_content,"html.parser")
 
 # Method - 2 Using Selenium:
-driver = webdriver.Chrome(ChromeDriverManager().install())
+#driver = webdriver.Chrome(ChromeDriverManager().install())
 driver = webdriver.Chrome("C:/Users/D4rkS/Desktop/chromedriver_win32/chromedriver.exe")
 #driver = webdriver.Firefox("C:/Users/D4rkS/Desktop/geckodriver-v0.32.2-win32/geckodriver.exe")
-time.sleep(1)
+time.sleep(5)
 driver.get("https://www.classcentral.com/")
-time.sleep(50) # the reason why time sleep is too long is that scroll down all the page and make sure all image on the page is clear. 
+time.sleep(50) # the reason why time sleep is too long is that scroll down all the page and make sure all image on the page is clear. Otherwise all image blurred 
 with codecs.open("selen_index.html","w","utf-8") as f:
     f.write(driver.page_source)
 soup_2 = BeautifulSoup(driver.page_source,"html.parser")
@@ -63,9 +62,17 @@ def copy_page(url):
 
 
 # list of all tags that contain any text
+# heuristic approach 
 #tags = ["section","div","header",'h2','h3',"aside","ul","li",'button','a','p','span','strong',"svg"]
-tags = ['a','p','span','strong','div','header','h2','h3','aside','ul','li','button','svg','main','section','main']
-tags_2 = ["h3","h2","p","strong"]
+tags = ['h2','h3','aside','ul','li','button','a','p','span','strong','svg']
+tags_2 = ['h2','h3','p','a','strong','span']
+tags_3 = ['html','body','main','section','header','div','h2','h3','p','a','strong','span']
+tags_4 = ['p','span']
+tags_5 = ['h2','h3']
+tags_5 = ['p']
+tags_6 = ['h2']
+tags_7 = ['h3']
+
 """
 testing of tags
 print("******************************************")
@@ -87,18 +94,28 @@ def html_text_translator(soup):
     for tag in tags:
         for content in soup_copy.find_all(tag):
             try :
-                content.string.replace_with(translator.translate(content.text,dest="hi").text)
+                if len(content.find_all()) > 0:
+                    for innerTag in content.find_all(text=True):                        
+                        if innerTag.text != '\n':
+                            innerTag.replace_with(translator.translate(innerTag.text,dest="hi").text)
+                        else:
+                            pass
+               
+                # content.find(tag,recursive=True).string.replace_with(translator.translate(content.find(text=True,recursive = True),dest="hi").text)
+                else:
+                    content.string.replace_with(translator.translate(content.text,dest="hi").text)              
             except:
                 pass
+
     #Translate page title                    
     soup_copy.find("title").string.replace_with(translator.translate(soup_copy.find("title").text,dest="hi").text)
-    
-    for tag in tags_2:
-        for content in soup_copy.find_all(tag):
-            try :
-                content.string.replace_with(translator.translate(content.text,src="en", dest="hi").text)
-            except:
-                pass
+   
+    # for tag in tags:
+    #     for content in soup_copy.find_all(tag):
+    #         try :
+    #            content.string.replace_with(translator.translate(content.text, dest="hi").text)  
+    #         except:
+    #             pass
     
     return soup_copy
 
@@ -112,7 +129,7 @@ soup_list = [translated_soup,translated_soup_2,translated_soup_3]
 
 for index,soup in enumerate(soup_list):
     with open(f"translated_index{index}.html","w",encoding="utf-8") as f:
-        f.write(str(soup))
+        f.write(str(soup.prettify(formatter=None)))
 
  
 
